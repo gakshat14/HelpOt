@@ -1,0 +1,20 @@
+{
+  "name": "helpot",
+  "version": "0.1.0",
+  "description": "HelpOt is bot powered to help the users of HelpingO App, with an aim to solve their simple queries",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "bot",
+    "helpingo",
+    "MSFTBOT"
+  ],
+  "author": "Akshat Gupta <akshat.gupta.ts@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "botbuilder": "^3.6.0",
+    "restify": "^4.3.0"
+  }
+}

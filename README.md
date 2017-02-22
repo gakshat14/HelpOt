@@ -1,0 +1,1 @@
+HelpOt is a bot developed using Microsoft Bot Framework to act as a support person.
