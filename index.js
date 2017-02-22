@@ -5,12 +5,7 @@ var builder = require ('botbuilder');
 var restify = require ('restify');
 
 var dial = [];
-//var rand = Math.floor((Math.random()*5) + 1);
 
-// var genrateRand = function () {
-//     var c = Math.floor((Math.random()*5) + 1);
-//     return c;    
-// }
 
 dial[0] = "Oh no! I didn't get it"; 
 dial[1] = "Let's just talk about HelpingO";
@@ -23,7 +18,10 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
     console.log('%s listening to %s', server.name, server.url);
 });
 
-var connector = new builder.ChatConnector();
+var connector = new builder.ChatConnector({
+    appId: process.env.MICROSOFT_APP_ID,
+    appPassword: process.env.MICROSOFT_APP_PASSWORD
+});
 var bot = new builder.UniversalBot(connector);
 
 server.post('api/messages', connector.listen());
