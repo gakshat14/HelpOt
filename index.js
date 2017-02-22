@@ -25,10 +25,6 @@ var bot = new builder.UniversalBot(connector);
 
 server.use(restify.queryParser());
 server.post('api/messages', connector.listen());
-server.get(/.*/, restify.serveStatic({
-	'directory': '.',
-	'default': 'index.html'
-}));
 
 bot.dialog('/', [
     function (session) {
