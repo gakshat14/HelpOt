@@ -1,8 +1,7 @@
-//ec5c4463-6e42-46e8-a44a-908f46b4d87f
-//czDDw6zqojbX42DauEoNsGy
-
 var builder = require ('botbuilder');
 var restify = require ('restify');
+var dotenv = require('dotenv');
+dotenv.load();
 
 var dial = [];
 
@@ -24,6 +23,7 @@ var connector = new builder.ChatConnector({
 });
 var bot = new builder.UniversalBot(connector);
 
+server.use(restify.queryParser());
 server.post('api/messages', connector.listen());
 
 bot.dialog('/', [
