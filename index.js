@@ -87,3 +87,6 @@ bot.dialog('/random', function(session){
     session.send(dial[rand]);
     session.endDialog();
 })
+//contact ninjas
+//tell us your moves
+//companion
