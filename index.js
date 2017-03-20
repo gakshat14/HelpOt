@@ -1,6 +1,8 @@
 var builder = require ('botbuilder');
 var restify = require ('restify');
 var dotenv = require('dotenv');
+var qna = require('./RestAPI');
+var async = require('async');
 dotenv.load();
 
 var dial = [];
@@ -68,9 +70,17 @@ intents.matches(/^#contact/i, '/contactSupport')
        .onDefault('/random');
 
 bot.dialog('/contactSupport', function (session) {
-    session.send("Searching for user");
-    session.endDialog();
-})
+    var sendQuestion = session.message.text.substring(9);
+    session.sendTyping();
+    qna.sendData(sendQuestion, function (data) {
+        var score = data.score;
+        if(score == 0){
+            session.endDialog('I lost my sword! try again');
+        } else {
+            session.endDialog(data.answer);
+        }
+    })
+});
 
 bot.dialog('/feedbackHelpingO', function (session) {
     session.send("Searching for feedback");

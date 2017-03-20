@@ -18,8 +18,10 @@
   "author": "Akshat Gupta <akshat.gupta.ts@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "async": "^2.1.5",
     "botbuilder": "^3.6.0",
     "dotenv": "^4.0.0",
+    "request": "^2.81.0",
     "restify": "^4.3.0"
   }
 }
