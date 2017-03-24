@@ -24,9 +24,21 @@ module.exports = {
         request.post(options, function (error, response, body) {
             callback(JSON.parse(body));
         });
-    }//, 
-    // sendEmail : function (q, callback) {
-        
-    // }
+    }
 }
+
+// bot.dialog('/', [
+//     function (session) {
+//         session.beginDialog('/getDetails', session.userData.profile);
+//     },
+//     function (session, results) {
+//         session.userData.name = results.response;
+//         session.send("Hello %(name)s! Welcome to HelpingO. HelpOt can help you with all of HelpingO!", session.userData);
+//         storage.saveData(userId, "Hello")
+//         console.log(bot.get(), bot.isInConversation());
+//         session.beginDialog('/next', lDialog);
+//     }
+// ]);
+
+
 
