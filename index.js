@@ -6,6 +6,10 @@ dotenv.load();
 
 var dial = [];
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> b449543bf9b5133ce3a5d999f02b62f52c93adf8
 dial[0] = "Oh no! I didn't get it";
 dial[1] = "Let's just talk about HelpingO";
 dial[2] = "I think I'm fried by your questions.";
@@ -17,20 +21,31 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 });
 
 var connector = new builder.ChatConnector({
-    appId: process.env.MICROSOFT_APP_ID,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD
+    // appId: process.env.MICROSOFT_APP_ID,
+    // appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
+<<<<<<< HEAD
+var model = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/6abfbb49-be88-4630-b26e-44122d91fe62?subscription-key=2ad3f4e145284a70a39865fb107b3ff8&staging=true&verbose=false&q=';
+var userName = '';
+=======
 var model = process.env.LUIS;
 var userName = '';
 var stuck;
 var nod;
+>>>>>>> b449543bf9b5133ce3a5d999f02b62f52c93adf8
 
 server.use(restify.queryParser());
 server.post('api/messages', connector.listen());
 
 var bot = new builder.UniversalBot(connector, function (session) {
     if(!session.userData.name){
+<<<<<<< HEAD
+        session.beginDialog('/next', lDialog);
+    } else { 
+        session.send('Hello %(name)s! Welcome back to HelpingO. How can I help you today?', session.userData);
+        session.beginDialog('/next', lDialog);
+=======
         session.beginDialog('/getDetails');
     } else { 
         session.send('Hello %(name)s! Welcome back to HelpingO. How can I help you today?', session.userData);
@@ -56,9 +71,52 @@ bot.dialog('/getDetails', [
         }
         session.send('Hello %(name)s! I\'\m HelpOt, Welcome to HelpingO! How can I help you today?', session.userData);
         session.beginDialog('/next', lDialog);
+>>>>>>> b449543bf9b5133ce3a5d999f02b62f52c93adf8
     }
-]);
+});
 
+<<<<<<< HEAD
+// bot.set('persistConversationData', true);
+
+// bot.dialog('/getDetails', [
+//     function (session, args, next) {
+//         if (!session.dialogData.name) {
+//             builder.Prompts.text(session, "Hey! I'm HelpOt. What's your name?");
+//         } else {
+//             next();
+//         }
+//     },
+//     function (session, results) {
+//         if (results.response) {
+//             session.userData.name = results.response;
+//         } else if (!session.userData.name){
+//             session.replaceDialog('/getDetails')
+//         }
+//         session.send('Hello %(name)s! Welcome to HelpingO! How can I help you today?', session.userData);
+//         session.beginDialog('/next', lDialog);
+        
+//     }
+// ]);
+
+var recognizer = new builder.LuisRecognizer(model);
+var lDialog = new builder.IntentDialog({recognizers:[recognizer]});
+bot.dialog('/next', lDialog);
+
+lDialog.matches('contactSupport', [function (session, args, next) {
+    var entity = builder.EntityRecognizer.findEntity(args.entities, 'change colour');
+    console.log(entity);
+    //console.log(entity[0].entities);
+    // var sendQuestion = session.message.text;
+    // session.sendTyping();
+    // qna.sendData(sendQuestion, function (data) {
+    //     var score = data.score;
+    //     if(score == 0){
+    //         session.endDialog('I lost my sword! try again');
+    //     } else {
+    //         session.endDialog(data.answer);
+    //     }
+    // });
+=======
 var recognizer = new builder.LuisRecognizer(model);
 var lDialog = new builder.IntentDialog({recognizers:[recognizer]});
 bot.dialog('/next', lDialog);
@@ -78,11 +136,16 @@ lDialog.matches('contactSupport', [function (session, args, next) {
             session.beginDialog('/next');
         }
     });
+>>>>>>> b449543bf9b5133ce3a5d999f02b62f52c93adf8
 }])
 
 .matches('feedback', [function (session, args, next) {
     session.send('Hello Mohit');
 }])
+<<<<<<< HEAD
+
+.onDefault('/random');
+=======
 
 .matches('thankYou', function (session, args, next) {
     if(nod){
@@ -105,6 +168,7 @@ lDialog.matches('contactSupport', [function (session, args, next) {
     stuck = true;
     session.beginDialog('/next');
 })
+>>>>>>> b449543bf9b5133ce3a5d999f02b62f52c93adf8
 
 .onDefault('/random');
 
@@ -112,4 +176,8 @@ bot.dialog('/random', function(session){
     var rand = Math.floor((Math.random()*4) + 1);
     session.send(dial[rand]);
     session.endDialog();
+<<<<<<< HEAD
+})
+=======
 });
+>>>>>>> b449543bf9b5133ce3a5d999f02b62f52c93adf8
