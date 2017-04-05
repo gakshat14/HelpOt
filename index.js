@@ -29,8 +29,8 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 });
 
 var connector = new builder.ChatConnector({
-    // appId: process.env.MICROSOFT_APP_ID,
-    // appPassword: process.env.MICROSOFT_APP_PASSWORD
+    appId: process.env.MICROSOFT_APP_ID,
+    appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
 var model = process.env.LUIS;
@@ -55,48 +55,48 @@ var bot = new builder.UniversalBot(connector, function (session) {
     }
 });
 
-// bot.dialog('/greet', function (session) {
-//     session.send('Hi I\'m HelpOt your support virtual assistant. I can help you with problems related to HelpingO.');
-//     session.beginDialog('/');
-// })
+bot.dialog('/greet', function (session) {
+    session.send('Hi I\'m HelpOt your support virtual assistant. I can help you with problems related to HelpingO.');
+    session.beginDialog('/');
+})
 
 
-// bot.on('conversationUpdate', function (message) {
-//     if (message.membersAdded) {
-//         message.membersAdded.forEach(function (identity) {
-//             if (identity.id === message.address.bot.id) {
-//                 bot.beginDialog(message.address, '/greet');
-//             }
-//         });
-//     }
-// });
+bot.on('conversationUpdate', function (message) {
+    if (message.membersAdded) {
+        message.membersAdded.forEach(function (identity) {
+            if (identity.id === message.address.bot.id) {
+                bot.beginDialog(message.address, '/greet');
+            }
+        });
+    }
+});
 
-// var logUserConversation = function (event) {
-//     fileName = path.join(__dirname, 'user.log');
-//     console.log(fileName);
-//     var logger = new (winston.Logger)({
-//         transports: [
-//             new (winston.transports.Console)(),
-//             new (winston.transports.File)({filename: fileName})
-//         ]
-//     })
-//     conversationMess.Messages[conversationMess.Messages.length] = 'message: ' + event.text; 
-//     conversationMess.User[0] = ' user: ' + event.address.user.id;
-//     logger.log('info', 'message: ' + event.text + ' user: ' + event.address.user.id);
-// }
+var logUserConversation = function (event) {
+    fileName = path.join(__dirname, 'user.log');
+    console.log(fileName);
+    var logger = new (winston.Logger)({
+        transports: [
+            new (winston.transports.Console)(),
+            new (winston.transports.File)({filename: fileName})
+        ]
+    })
+    conversationMess.Messages[conversationMess.Messages.length] = 'message: ' + event.text; 
+    conversationMess.User[0] = ' user: ' + event.address.user.id;
+    logger.log('info', 'message: ' + event.text + ' user: ' + event.address.user.id);
+}
 // Middleware for logging
-// bot.use({
-//     receive: function (session, next) {
-//         logUserConversation(session);
-//         next();
-//     },
-//     send: function (session, next) {
-//         logUserConversation(session);
-//         next();
-//     }
-// });
+bot.use({
+    receive: function (event, next) {
+        logUserConversation(event);
+        next();
+    },
+    send: function (event, next) {
+        logUserConversation(event);
+        next();
+    }
+});
 
-//bot.set('persistConversationData', true);
+bot.set('persistConversationData', true);
 
 bot.dialog('/getDetails', [
     function (session, args, next) {
