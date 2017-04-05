@@ -3,7 +3,7 @@
 var builder = require ('botbuilder');
 var restify = require ('restify');
 var dotenv = require('dotenv');
-var emailjs = require('emailjs');
+
 var path = require('path');
 var winston = require('winston');
 var fs = require('fs');
@@ -23,14 +23,6 @@ dial[1] = "Let's just talk about HelpingO";
 dial[2] = "I think I'm fried by your questions.";
 dial[3] = "Let's try something new, let's create a companion profile";
 
-//creating email client
-var emailServer = emailjs.server.connect({
-    user : 'helpot.ts@gmail.com',
-    password: 'TechShanty',
-    host: 'smtp.gmail.com',
-    ssl: true
-});
-
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
     console.log('%s listening to %s', server.name, server.url);
@@ -46,6 +38,7 @@ var stuck;
 var nod;
 var emailID;
 var fileName;
+var answered;
 
 server.use(restify.queryParser());
 server.post('api/messages', connector.listen());
@@ -53,18 +46,34 @@ server.post('api/messages', connector.listen());
 var bot = new builder.UniversalBot(connector, function (session) {
     if(!session.userData.name){
         console.log(session.message.address.user.id);
+        //session.send('Hi I\'m HelpOt your support virtual assistant. I can help you with problems related to HelpingO. Just say Hi! to get started.');
         session.beginDialog('/getDetails');
     } else { 
+        //session.send('Hi I\'m HelpOt your support virtual assistant. I can help you with problems related to HelpingO. Just say Hi! to get started.');
         session.send('Hello %(name)s! Welcome back to HelpingO. How can I help you today?', session.userData);
         session.beginDialog('/next', lDialog);
     }
 });
 
+bot.dialog('/greet', function (session) {
+    session.send('Hi I\'m HelpOt your support virtual assistant. I can help you with problems related to HelpingO.');
+    session.beginDialog('/');
+})
+
+
+bot.on('conversationUpdate', function (message) {
+    if (message.membersAdded) {
+        message.membersAdded.forEach(function (identity) {
+            if (identity.id === message.address.bot.id) {
+                bot.beginDialog(message.address, '/greet');
+            }
+        });
+    }
+});
+
 var logUserConversation = function (event) {
     fileName = path.join(__dirname, 'user.log');
-
     console.log(fileName);
-
     var logger = new (winston.Logger)({
         transports: [
             new (winston.transports.Console)(),
@@ -92,7 +101,7 @@ bot.set('persistConversationData', true);
 bot.dialog('/getDetails', [
     function (session, args, next) {
         if (!session.dialogData.name) {
-            builder.Prompts.text(session, "Hey! I'm HelpOt. What's your name?");
+            builder.Prompts.text(session, "What's your name?");
         } else {
             next();
         }
@@ -114,18 +123,24 @@ bot.dialog('/next', lDialog);
 
 lDialog.matches('contactSupport', [function (session, args, next) {
     session.sendTyping();
-    if(args.entities != []){
-        session.privateConversationData.entity = args.entities[0].entity;
-    }
+    // if(args.entities != []){
+    //     session.privateConversationData.entity = args.entities[0].entity;
+    // }
     session.conversationData.message = session.message.text;
     var sendQuestion = session.message.text;
     qna.sendData(sendQuestion, function (data) {
-        var score = data.score;
-        if(score == 0){
+        console.log(data);
+        if(data.Error){
+            session.send('I\'m sorry. I didn\'t understand that. Please rephrase your query');
+            answered = true;
+            session.replaceDialog('/next', lDialog);
+        } else if(data.score == 0){
             session.send('I lost my sword! try again');
+            answered = true;
             session.replaceDialog('/next', lDialog);
         } else {
             session.send(data.answer);
+            answered = true;
             session.beginDialog('/next');
         }
     });
@@ -144,6 +159,9 @@ lDialog.matches('contactSupport', [function (session, args, next) {
         session.send(' I\'\m still here if you need anythying. Just say Hi! to wake me up again');
         stuck = false;
         session.endConversation();
+    } else if(!answered){
+        session.send('But, you didn\'t ask me anything go ahead ask me something');
+        session.beginDialog('/next');
     } else if( !stuck && !nod ){
         session.send('Great! Good to know that I was able to help you. I\'\m still here if you need anythying. Just say Hi!');
         nod = true;
@@ -167,7 +185,7 @@ bot.dialog('/random', function(session){
 
 bot.dialog('/getEmail', [function (session, args, next) {
     if( !session.userData.email ) {
-        builder.Prompts.text(session, "What is your Email-ID");
+        builder.Prompts.text(session, "What is your email-id?");
     } else {
         next();
     }
@@ -176,14 +194,18 @@ bot.dialog('/getEmail', [function (session, args, next) {
         if( results.response ){
             session.userData.email = results.response;
             emailID = session.userData.email;
-            sendEmail(JSON.stringify(conversationMess));
-            session.send('I have sent an email to the team');
+            session.sendTyping();
+            qna.sendEmail(JSON.stringify(conversationMess), emailID, function (data) {
+                session.send('I have sent an email to the team');
+            });
             stuck = true;
             session.beginDialog('/next');
         } else if( !results.response || session.userData.email){
             emailID = session.userData.email;
-            sendEmail(JSON.stringify(conversationMess));
-            session.send('I have sent an email to the team');
+            session.sendTyping();
+            qna.sendEmail(JSON.stringify(conversationMess), emailID, function (data) {
+                session.send('I have sent an email to the team');
+            });
             stuck = true;
             session.beginDialog('/next');
         } else {
@@ -191,17 +213,3 @@ bot.dialog('/getEmail', [function (session, args, next) {
         } 
     }
 ])
-
-var sendEmail = function (body) {
-    var message = {
-        text:  "Conversation " + body + " sent by user: " + emailID,
-        from: 'HelpOt<helpot.ts@gmail.com>',
-        to: 'TechShanty<techshanty@gmail.com>',
-        cc: "HelpingO<support@helpingo.com>",
-        subject: "Support Needed"
-    };
-    emailServer.send(message, function (err, data) {
-        console.log(err);
-        console.log(data);
-    });
-}
