@@ -29,8 +29,8 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 });
 
 var connector = new builder.ChatConnector({
-    appId: process.env.MICROSOFT_APP_ID,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD
+    //appId: process.env.MICROSOFT_APP_ID,
+    //appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
 var model = process.env.LUIS;
@@ -46,43 +46,26 @@ server.post('api/messages', connector.listen());
 var bot = new builder.UniversalBot(connector, function (session) {
     if(!session.userData.name){
         console.log(session.message.address.user.id);
-        //session.send('Hi I\'m HelpOt your support virtual assistant. I can help you with problems related to HelpingO. Just say Hi! to get started.');
         session.beginDialog('/getDetails');
     } else { 
-        //session.send('Hi I\'m HelpOt your support virtual assistant. I can help you with problems related to HelpingO. Just say Hi! to get started.');
-        session.send('Hello %(name)s! Welcome back to HelpingO. How can I help you today?', session.userData);
+        session.sendTyping();
+        session.send('Hello %(name)s! I\'m HelpOt your support virtual assistant. Welcome back to HelpingO. How can I help you today?', session.userData);
         session.beginDialog('/next', lDialog);
     }
 });
 
-bot.dialog('/greet', function (session) {
-    session.send('Hi I\'m HelpOt your support virtual assistant. I can help you with problems related to HelpingO.');
-    session.beginDialog('/');
-})
-
-
-bot.on('conversationUpdate', function (message) {
-    if (message.membersAdded) {
-        message.membersAdded.forEach(function (identity) {
-            if (identity.id === message.address.bot.id) {
-                bot.beginDialog(message.address, '/greet');
-            }
-        });
-    }
-});
-
 var logUserConversation = function (event) {
-    // fileName = path.join(__dirname, 'user.log');
-    // console.log(fileName);
-    // var logger = new (winston.Logger)({
-    //     transports: [
-    //         new (winston.transports.Console)(),
-    //         new (winston.transports.File)({filename: fileName})
-    //     ]
-    // })
+    fileName = path.join(__dirname, 'user.log');
+    console.log(fileName);
+    var logger = new (winston.Logger)({
+        transports: [
+            new (winston.transports.Console)(),
+            new (winston.transports.File)({filename: fileName})
+        ]
+    })
     conversationMess.Messages[conversationMess.Messages.length] = 'message: ' + event.text; 
     conversationMess.User[0] = ' user: ' + event.address.user.id;
-    //logger.log('info', 'message: ' + event.text + ' user: ' + event.address.user.id);
+    logger.log('info', 'message: ' + event.text + ' user: ' + event.address.user.id);
 }
 // Middleware for logging
 bot.use({
@@ -101,7 +84,7 @@ bot.set('persistConversationData', true);
 bot.dialog('/getDetails', [
     function (session, args, next) {
         if (!session.dialogData.name) {
-            builder.Prompts.text(session, "What's your name?");
+            builder.Prompts.text(session, "Hi! Welcome to HelpingO. What's your name?");
         } else {
             next();
         }
@@ -112,7 +95,7 @@ bot.dialog('/getDetails', [
         } else if (!session.userData.name){
             session.replaceDialog('/getDetails')
         }
-        session.send('Hello %(name)s! I\'\m HelpOt, Welcome to HelpingO! How can I help you today?', session.userData);
+        session.send('Hello %(name)s! I\'m HelpOt your support virtual assistant. How can I help you today?', session.userData);
         session.beginDialog('/next', lDialog);
     }
 ]);
@@ -123,9 +106,9 @@ bot.dialog('/next', lDialog);
 
 lDialog.matches('contactSupport', [function (session, args, next) {
     session.sendTyping();
-    // if(args.entities != []){
-    //     session.privateConversationData.entity = args.entities[0].entity;
-    // }
+    if(args.entities.length > 0){
+        session.privateConversationData.entity = args.entities[0].entity;
+    }
     session.conversationData.message = session.message.text;
     var sendQuestion = session.message.text;
     qna.sendData(sendQuestion, function (data) {
@@ -144,10 +127,6 @@ lDialog.matches('contactSupport', [function (session, args, next) {
             session.beginDialog('/next');
         }
     });
-}])
-
-.matches('feedback', [function (session, args, next) {
-    session.send('Hello Mohit');
 }])
 
 .matches('thankYou', function (session, args, next) {
