@@ -71,30 +71,30 @@ bot.on('conversationUpdate', function (message) {
     }
 });
 
-var logUserConversation = function (event) {
-    fileName = path.join(__dirname, 'user.log');
-    console.log(fileName);
-    var logger = new (winston.Logger)({
-        transports: [
-            new (winston.transports.Console)(),
-            new (winston.transports.File)({filename: fileName})
-        ]
-    })
-    conversationMess.Messages[conversationMess.Messages.length] = 'message: ' + event.text; 
-    conversationMess.User[0] = ' user: ' + event.address.user.id;
-    logger.log('info', 'message: ' + event.text + ' user: ' + event.address.user.id);
-}
-// Middleware for logging
-bot.use({
-    receive: function (event, next) {
-        logUserConversation(event);
-        next();
-    },
-    send: function (event, next) {
-        logUserConversation(event);
-        next();
-    }
-});
+// var logUserConversation = function (event) {
+//     fileName = path.join(__dirname, 'user.log');
+//     console.log(fileName);
+//     var logger = new (winston.Logger)({
+//         transports: [
+//             new (winston.transports.Console)(),
+//             new (winston.transports.File)({filename: fileName})
+//         ]
+//     })
+//     conversationMess.Messages[conversationMess.Messages.length] = 'message: ' + event.text; 
+//     conversationMess.User[0] = ' user: ' + event.address.user.id;
+//     logger.log('info', 'message: ' + event.text + ' user: ' + event.address.user.id);
+// }
+// // Middleware for logging
+// bot.use({
+//     receive: function (event, next) {
+//         logUserConversation(event);
+//         next();
+//     },
+//     send: function (event, next) {
+//         logUserConversation(event);
+//         next();
+//     }
+// });
 
 bot.set('persistConversationData', true);
 
