@@ -1,9 +1,8 @@
 'use strict';
-//refrencing module
+//refrencing  module
 var builder = require ('botbuilder');
 var restify = require ('restify');
 var dotenv = require('dotenv');
-
 var path = require('path');
 var winston = require('winston');
 var fs = require('fs');
@@ -11,10 +10,13 @@ var fs = require('fs');
 //custom module
 var qna = require('./RestAPI');
 
+//loading
 dotenv.load();
 
 var conversationMess = {'Messages':[],
                         'User': []};
+
+var emailValidator = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 
 var dial = [];
 
@@ -43,11 +45,13 @@ var answered;
 server.use(restify.queryParser());
 server.post('api/messages', connector.listen());
 
+fileName = path.join(__dirname, 'user.log');
+
 var bot = new builder.UniversalBot(connector, function (session) {
     if(!session.userData.name){
-        console.log(session.message.address.user.id);
+        console.log(session.message.address.user);
         session.beginDialog('/getDetails');
-    } else { 
+    } else {
         session.sendTyping();
         session.send('Hello %(name)s! I\'m HelpOt your support virtual assistant. Welcome back to HelpingO. How can I help you today?', session.userData);
         session.beginDialog('/next', lDialog);
@@ -55,7 +59,6 @@ var bot = new builder.UniversalBot(connector, function (session) {
 });
 
 var logUserConversation = function (event) {
-    fileName = path.join(__dirname, 'user.log');
     console.log(fileName);
     var logger = new (winston.Logger)({
         transports: [
@@ -63,10 +66,11 @@ var logUserConversation = function (event) {
             new (winston.transports.File)({filename: fileName})
         ]
     })
-    conversationMess.Messages[conversationMess.Messages.length] = 'message: ' + event.text; 
+    conversationMess.Messages[conversationMess.Messages.length] = 'message: ' + event.text;
     conversationMess.User[0] = ' user: ' + event.address.user.id;
     logger.log('info', 'message: ' + event.text + ' user: ' + event.address.user.id);
 }
+
 // Middleware for logging
 bot.use({
     receive: function (event, next) {
@@ -81,24 +85,11 @@ bot.use({
 
 bot.set('persistConversationData', true);
 
-bot.dialog('/getDetails', [
-    function (session, args, next) {
-        if (!session.dialogData.name) {
-            builder.Prompts.text(session, "Hi! Welcome to HelpingO. What's your name?");
-        } else {
-            next();
-        }
-    },
-    function (session, results) {
-        if (results.response) {
-            session.userData.name = results.response;
-        } else if (!session.userData.name){
-            session.replaceDialog('/getDetails')
-        }
-        session.send('Hello %(name)s! I\'m HelpOt your support virtual assistant. How can I help you today?', session.userData);
-        session.beginDialog('/next', lDialog);
-    }
-]);
+bot.dialog('/getDetails', function (session) {
+    session.userData.name = session.message.address.user.name;
+    session.send('Hi %(name)s! I\'m HelpOt your Virtual Support Assistant. Welcome to HelpingO! I can help you with all the problems related to HelpingO.', session.userData);
+    session.beginDialog('/next', lDialog);
+});
 
 var recognizer = new builder.LuisRecognizer(model);
 var lDialog = new builder.IntentDialog({recognizers:[recognizer]});
@@ -130,6 +121,7 @@ lDialog.matches('contactSupport', [function (session, args, next) {
 }])
 
 .matches('thankYou', function (session, args, next) {
+    session.sendTyping();
     if(nod){
         session.send('Bbye!');
         nod = false;
@@ -149,6 +141,7 @@ lDialog.matches('contactSupport', [function (session, args, next) {
 })
 
 .matches('stuck', function (session, args, next) {
+    session.sendTyping();
     session.send('Sorry, for the inconvinience caused. I\'ll be sending an email to my team with your query and will get back to you ASAP');
     stuck = true;
     session.beginDialog('/getEmail');
@@ -157,28 +150,36 @@ lDialog.matches('contactSupport', [function (session, args, next) {
 .onDefault('/random');
 
 bot.dialog('/random', function(session){
-    var rand = Math.floor((Math.random()*4) + 1);
+    session.sendTyping();
+    var rand = Math.floor((Math.random()*3) + 1);
+    console
     session.send(dial[rand]);
     session.endDialog();
 });
 
 bot.dialog('/getEmail', [function (session, args, next) {
+    session.sendTyping();
     if( !session.userData.email ) {
         builder.Prompts.text(session, "What is your email-id?");
     } else {
         next();
     }
-}, 
+},
     function (session, results, next) {
+        session.sendTyping();
         if( results.response ){
-            session.userData.email = results.response;
-            emailID = session.userData.email;
-            session.sendTyping();
-            qna.sendEmail(JSON.stringify(conversationMess), emailID, function (data) {
-                session.send('I have sent an email to the team');
-            });
-            stuck = true;
-            session.beginDialog('/next');
+            if(emailValidator.test(results.response)){
+                session.userData.email = results.response;
+                emailID = session.userData.email;
+                session.sendTyping();
+                qna.sendEmail(JSON.stringify(conversationMess), emailID, function (data) {
+                    session.send('I have sent an email to the team');
+                });
+                stuck = true;
+                session.beginDialog('/next');
+            } else {
+                session.replaceDialog('/getEmail');
+            }
         } else if( !results.response || session.userData.email){
             emailID = session.userData.email;
             session.sendTyping();
@@ -189,6 +190,6 @@ bot.dialog('/getEmail', [function (session, args, next) {
             session.beginDialog('/next');
         } else {
             session.replaceDialog('/getEmail');
-        } 
+        }
     }
-])
+]);
