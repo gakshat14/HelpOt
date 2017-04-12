@@ -183,8 +183,12 @@ bot.dialog('/getEmail', [function (session, args, next) {
         } else if( !results.response || session.userData.email){
             emailID = session.userData.email;
             session.sendTyping();
-            qna.sendEmail(JSON.stringify(conversationMess), emailID, function (data) {
+            qna.sendEmail(JSON.stringify(conversationMess), emailID, function (err, data) {
+                if(err){
+                    session.send('I was not able to send an email to my team, please send your query to support@helpingo.com.');
+                } else {
                 session.send('I have sent an email to the team');
+                }
             });
             stuck = true;
             session.beginDialog('/next');

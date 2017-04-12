@@ -46,7 +46,7 @@ module.exports = {
         emailServer.send(message, function (err, data) {
             console.log(err);
             console.log(data);
-            callback(data);
+            callback(err, data);
         });
     }
 }
