@@ -59,16 +59,16 @@ var bot = new builder.UniversalBot(connector, function (session) {
 });
 
 var logUserConversation = function (event) {
-    console.log(fileName);
+    /*console.log(fileName);
     var logger = new (winston.Logger)({
         transports: [
             new (winston.transports.Console)(),
             new (winston.transports.File)({filename: fileName})
         ]
-    })
+    })*/
     conversationMess.Messages[conversationMess.Messages.length] = 'message: ' + event.text;
     conversationMess.User[0] = ' user: ' + event.address.user.id;
-    logger.log('info', 'message: ' + event.text + ' user: ' + event.address.user.id);
+    //logger.log('info', 'message: ' + event.text + ' user: ' + event.address.user.id);
 }
 
 // Middleware for logging
