@@ -15,7 +15,7 @@ var headers = {
 
 var emailServer = emailjs.server.connect({
     user : 'helpot.ts@gmail.com',
-    password: 'TechShanty',
+    password: 'SuperChief',
     host: 'smtp.gmail.com',
     ssl: true
 });
@@ -44,8 +44,8 @@ module.exports = {
             subject: "Support Needed"
         };
         emailServer.send(message, function (err, data) {
-            console.log(err);
-            console.log(data);
+            //console.log(err);
+            //console.log(data);
             callback(err, data);
         });
     }

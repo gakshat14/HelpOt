@@ -31,8 +31,8 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 });
 
 var connector = new builder.ChatConnector({
-    appId: process.env.MICROSOFT_APP_ID,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD
+    //appId: process.env.MICROSOFT_APP_ID,
+    //appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
 var model = process.env.LUIS;
@@ -172,8 +172,14 @@ bot.dialog('/getEmail', [function (session, args, next) {
                 session.userData.email = results.response;
                 emailID = session.userData.email;
                 session.sendTyping();
-                qna.sendEmail(JSON.stringify(conversationMess), emailID, function (data) {
-                    session.send('I have sent an email to the team');
+                qna.sendEmail(JSON.stringify(conversationMess), emailID, function (err, data) {
+                    console.log(err);
+                    console.log(data);
+                    if(err != null || err != undefined){
+                        session.send('I was not able to send an email to my team, please send your query to support@helpingo.com.');
+                    } else {
+                        session.send('I have sent an email to the team');
+                    }
                 });
                 stuck = true;
                 session.beginDialog('/next');
@@ -184,7 +190,7 @@ bot.dialog('/getEmail', [function (session, args, next) {
             emailID = session.userData.email;
             session.sendTyping();
             qna.sendEmail(JSON.stringify(conversationMess), emailID, function (err, data) {
-                if(err){
+                if(err != null || err != undefined){
                     session.send('I was not able to send an email to my team, please send your query to support@helpingo.com.');
                 } else {
                 session.send('I have sent an email to the team');
