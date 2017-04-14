@@ -17,7 +17,8 @@ var emailServer = emailjs.server.connect({
     user : 'helpot.ts@gmail.com',
     password: 'SuperChief',
     host: 'smtp.gmail.com',
-    ssl: true
+    port:587,
+    tls: true
 });
 
 module.exports = {
