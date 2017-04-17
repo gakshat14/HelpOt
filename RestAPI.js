@@ -1,18 +1,23 @@
 'use strict';
-
+//loading request module
 var request = require('request');
 var dotenv = require('dotenv');
+
+//loading emailjs module which provide email functionality
 var emailjs = require('emailjs');
 dotenv.load();
 
 var q;
+//loading qna credentials
 var qnaId = process.env.QNA_MAKER_ID
 
+//setting headers for the post request
 var headers = {
     'Content-Type' : 'application/json',
     'Ocp-Apim-Subscription-Key' : qnaId
 }
 
+//defining the email server
 var emailServer = emailjs.server.connect({
     user : 'helpot.ts@gmail.com',
     password: 'SuperChief',
@@ -21,6 +26,7 @@ var emailServer = emailjs.server.connect({
     tls: true
 });
 
+//exporting module so that it can be used by main bot 
 module.exports = {
     sendData : function (q, callback) {
         var answer = '';
@@ -32,10 +38,12 @@ module.exports = {
         }
         
         request.post(options, function (error, response, body) {
+            //after receiving response pass the data back
+            //by a callback function
             callback(JSON.parse(body));
         });
     }, 
-
+    //sending EMail to the team
     sendEmail: function name(query, emailID, callback) {
         var message = {
             text:  "Conversation " + query + " sent by user: " + emailID,
