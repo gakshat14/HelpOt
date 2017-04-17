@@ -122,15 +122,15 @@ bot.use({
 
 //when a new conversation is started then
 //begin dialog instaed of for waiting for a hi
-bot.on('conversationUpdate', function (message) {
-    if (message.membersAdded) {
-        message.membersAdded.forEach(function (identity) {
-            if (identity.id === message.address.bot.id) {
-                bot.beginDialog(message.address, '/');
-            }
-        });
-    }
-});
+// bot.on('conversationUpdate', function (message) {
+//     if (message.membersAdded) {
+//         message.membersAdded.forEach(function (identity) {
+//             if (identity.id === message.address.bot.id) {
+//                 bot.beginDialog(message.address, '/');
+//             }
+//         });
+//     }
+// });
 
 //setting bot memory state like conversation data to true
 //so that we can store it
