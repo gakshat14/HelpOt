@@ -54,8 +54,8 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 //creating connector service which will be main component
 var connector = new builder.ChatConnector({
     //retrieving APP ID and Password from file
-    //appId: process.env.MICROSOFT_APP_ID,
-    //appPassword: process.env.MICROSOFT_APP_PASSWORD
+    appId: process.env.MICROSOFT_APP_ID,
+    appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
 //reading LUIS endpoint from file
@@ -75,19 +75,7 @@ server.post('api/messages', connector.listen());
 fileName = path.join(__dirname, 'user.log');
 
 //defining bot which will contain all the dialogs and everything 
-var bot = new builder.UniversalBot(connector, function (session) {
-    //checking if we have username in bot's memory
-    //if not then start getDetails dialog
-    if(!session.userData.name){
-        session.beginDialog('/getDetails');
-    } else {
-        //sending typing and saying hello
-        session.sendTyping();
-        session.send('Hello %(name)s! I\'m HelpOt your support virtual assistant. Welcome back to HelpingO. How can I help you today?', session.userData);
-        //begining LUIS dialog
-        session.beginDialog('/next', lDialog);
-    }
-});
+var bot = new builder.UniversalBot(connector);
 
 //function for logging user conversation
 var logUserConversation = function (event) {
@@ -103,6 +91,7 @@ var logUserConversation = function (event) {
     //storing conversation for sending an email to the team
     conversationMess.Messages[conversationMess.Messages.length] = 'message: ' + event.text;
     conversationMess.User[0] = ' user: ' + event.address.user.id;
+
     //logging conversation in the user.log
     logger.log('info', 'message: ' + event.text + ' user: ' + event.address.user.id);
 }
@@ -122,26 +111,48 @@ bot.use({
 
 //when a new conversation is started then
 //begin dialog instaed of for waiting for a hi
-// bot.on('conversationUpdate', function (message) {
-//     if (message.membersAdded) {
-//         message.membersAdded.forEach(function (identity) {
-//             if (identity.id === message.address.bot.id) {
-//                 bot.beginDialog(message.address, '/');
-//             }
-//         });
-//     }
-// });
+bot.on('conversationUpdate', function (message) {
+    if (message.membersAdded) {
+        message.membersAdded.forEach(function (identity) {
+            if (identity.id === message.address.bot.id) {
+                bot.beginDialog(message.address, '/greet');
+            }
+        });
+    }
+});
 
 //setting bot memory state like conversation data to true
 //so that we can store it
 bot.set('persistConversationData', true);
+
+bot.dialog('/', function (session) {
+    if(!session.userData.name){
+        session.beginDialog('/getDetails');
+    } else {
+        //sending typing and saying hello
+        session.sendTyping();
+        session.send('Hello %(name)s! Welcome back to HelpingO. How can I help you today?', session.userData);
+        //begining LUIS dialog
+        session.beginDialog('/next', lDialog);
+    }
+})
+
+bot.dialog('/greet', [
+    function (session) {
+        builder.Prompts.text(session, 'Hi I\'m HelpOt your virtual support assistant. Although I\'m bot, but I\'ll do as best as I can to solve your queries. If there\'s something I don\'t understand I\'ll direct you to my team members. Just say Hi! to get started');
+    }, function (session, results) {
+        if(results.response){
+            session.beginDialog('/');
+        }
+    }
+])
 
 //dialog definition for getDetails
 bot.dialog('/getDetails', function (session) {
     //saving userName to bot's memory so that it can be used
     //if a user visits us again
     session.userData.name = session.message.address.user.name;
-    session.send('Hi %(name)s! I\'m HelpOt your Virtual Support Assistant. Welcome to HelpingO! I can help you with all the problems related to HelpingO.', session.userData);
+    session.send('Hi %(name)s! Welcome to HelpingO! I will help you with all the problems related to HelpingO.', session.userData);
     //begining LUIS dialog
     session.beginDialog('/next', lDialog);
 });
