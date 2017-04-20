@@ -54,8 +54,8 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 //creating connector service which will be main component
 var connector = new builder.ChatConnector({
     //retrieving APP ID and Password from file
-    appId: process.env.MICROSOFT_APP_ID,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD
+    //appId: process.env.MICROSOFT_APP_ID,
+    //appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
 //reading LUIS endpoint from file
@@ -126,16 +126,10 @@ bot.on('conversationUpdate', function (message) {
 bot.set('persistConversationData', true);
 
 bot.dialog('/', function (session) {
-    if(!session.userData.name){
-        session.beginDialog('/getDetails');
-    } else {
-        //sending typing and saying hello
-        session.sendTyping();
-        session.send('Hello %(name)s! Welcome back to HelpingO. How can I help you today?', session.userData);
-        //begining LUIS dialog
-        session.beginDialog('/next', lDialog);
-    }
-})
+    session.dialogData.name = session.message.address.user.name;
+    session.send('Hi %(name)s! Welcome to HelpingO! I can help you with all the problems related to HelpingO', session.dialogData);
+    session.beginDialog('/next', lDialog);
+});
 
 bot.dialog('/greet', [
     function (session) {
@@ -146,16 +140,6 @@ bot.dialog('/greet', [
         }
     }
 ])
-
-//dialog definition for getDetails
-bot.dialog('/getDetails', function (session) {
-    //saving userName to bot's memory so that it can be used
-    //if a user visits us again
-    session.userData.name = session.message.address.user.name;
-    session.send('Hi %(name)s! Welcome to HelpingO! I will help you with all the problems related to HelpingO.', session.userData);
-    //begining LUIS dialog
-    session.beginDialog('/next', lDialog);
-});
 
 //defining recogniser which is LUIS
 //and passing the LUIS string 
@@ -262,7 +246,7 @@ bot.dialog('/getEmail', [function (session, args, next) {
     session.sendTyping();
     //checking session.userData if we have email then no need to ask if not then
     //prompt user to enter one
-    if( !session.userData.email ) {
+    if( !session.dialogData.email ) {
         builder.Prompts.text(session, "What is your email-id?");
     } else {
         //if we have then go on to next waterfell step
@@ -276,8 +260,8 @@ bot.dialog('/getEmail', [function (session, args, next) {
             //check the email whether its of valid format or not
             if(emailValidator.test(results.response)){
                 //save the email id
-                session.userData.email = results.response;
-                emailID = session.userData.email;
+                session.dialogData.email = results.response;
+                emailID = session.dialogData.email;
                 session.sendTyping();
                 //passing email and conversation to sendEmail function and sending email
                 qna.sendEmail(JSON.stringify(conversationMess), emailID, function (err, data) {
@@ -300,8 +284,8 @@ bot.dialog('/getEmail', [function (session, args, next) {
                 session.replaceDialog('/getEmail');
             }
         //if we didn't receive any response then
-        } else if( !results.response || session.userData.email){
-            emailID = session.userData.email;
+        } else if( !results.response || session.dialogData.email){
+            emailID = session.dialogData.email;
             session.sendTyping();
             qna.sendEmail(JSON.stringify(conversationMess), emailID, function (err, data) {
                 if(err != null || err != undefined){
