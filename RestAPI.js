@@ -20,7 +20,7 @@ var headers = {
 //defining the email server
 var emailServer = emailjs.server.connect({
     user : 'helpot.ts@gmail.com',
-    password: 'SuperChief',
+    password: 'SuperDuperChief',
     host: 'smtp.gmail.com',
     port:587,
     tls: true
